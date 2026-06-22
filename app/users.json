@@ -1,0 +1,19 @@
+{
+  "users": {
+    "V": {
+      "id": "V",
+      "password": "weball",
+      "name": "V"
+    },
+    "A": {
+      "id": "A",
+      "password": "bf",
+      "name": "A"
+    },
+    "D": {
+      "id": "D",
+      "password": "bestie",
+      "name": "D"
+    }
+  }
+}
