@@ -1,3 +1,28 @@
 {
-  "messages": []
+  "messages": [
+    {
+      "from": "V",
+      "to": "A",
+      "text": "bae?",
+      "timestamp": "2026-06-22 19:59:12"
+    },
+    {
+      "from": "A",
+      "to": "V",
+      "text": "yayy",
+      "timestamp": "2026-06-22 20:01:30"
+    },
+    {
+      "from": "V",
+      "to": "D",
+      "text": "broski?",
+      "timestamp": "2026-06-22 20:02:07"
+    },
+    {
+      "from": "D",
+      "to": "V",
+      "text": "yayy",
+      "timestamp": "2026-06-22 20:02:33"
+    }
+  ]
 }

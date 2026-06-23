@@ -4,7 +4,50 @@ from datetime import datetime
 import os
 
 # Set page config
-st.set_page_config(page_title="Texting App", page_icon="💬", layout="centered")
+st.set_page_config(page_title="hub", layout="centered")
+
+THEMES = {
+    "Pastel Pink": {
+        "bg": "#ffe6f0",
+        "card": "#ffd9e8",
+        "text": "#3a2a36",
+        "input": "#fff0f7",
+        "border": "#f2c1d6"
+    },
+    "Teal Light Green": {
+        "bg": "#e8f7f2",
+        "card": "#d5f0e5",
+        "text": "#0f4d4a",
+        "input": "#e7f7f1",
+        "border": "#aeddd2"
+    },
+    "Dark Mood": {
+        "bg": "#121212",
+        "card": "#1e1e1e",
+        "text": "#e5e5e5",
+        "input": "#2a2a2a",
+        "border": "#3f3f3f"
+    }
+}
+
+def apply_theme(theme_name):
+    theme = THEMES.get(theme_name, THEMES["Teal Light Green"])
+    st.markdown(
+        f"""<style>
+        [data-testid="stAppViewContainer"] {{ background: {theme['bg']}; color: {theme['text']}; }}
+        .main {{ background-color: transparent; }}
+        .css-1v3fvcr {{ background-color: transparent; }}
+        .reportview-container .main footer, .reportview-container .main header {{ background: transparent; }}
+        .stButton>button {{ background-color: {theme['card']}; color: {theme['text']}; border: 1px solid {theme['border']}; border-radius: 8px; }}
+        .stTextInput>div>div>input, .stTextArea>div>div>textarea {{ background-color: {theme['input']}; color: {theme['text']}; border: 1px solid {theme['border']}; border-radius: 8px; }}
+        .stRadio>div>div>label {{ color: {theme['text']}; }}
+        .stMarkdown, .stText, .stCaption {{ color: {theme['text']}; }}
+        .st-b7 {{ background-color: {theme['card']} !important; }}
+        .css-1d391kg {{ background-color: {theme['card']} !important; }}
+        .css-1outpf7 {{ background-color: {theme['card']} !important; }}
+        </style>""",
+        unsafe_allow_html=True,
+    )
 
 # Load users
 def load_users():
@@ -27,10 +70,15 @@ def save_messages(messages):
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.user_id = None
+if "theme" not in st.session_state:
+    st.session_state.theme = "Teal Light Green"
 
 # Login page
 if not st.session_state.logged_in:
-    st.title("💬 Texting App")
+    st.sidebar.title("Theme")
+    st.sidebar.selectbox("Choose a theme", list(THEMES.keys()), key="theme")
+    apply_theme(st.session_state.theme)
+    st.title("hub")
     st.markdown("---")
     
     col1, col2, col3 = st.columns(3)
@@ -62,11 +110,14 @@ if not st.session_state.logged_in:
                 del st.session_state.selected_user
                 st.rerun()
             else:
-                st.error("❌ Incorrect password!")
+                st.error("Incorrect password!")
 
 else:
+    st.sidebar.title("Theme")
+    st.sidebar.selectbox("Choose a theme", list(THEMES.keys()), key="theme")
+    apply_theme(st.session_state.theme)
     # Main app - logged in
-    st.title(f"💬 Welcome, {st.session_state.user_id}!")
+    st.title(f"Welcome, {st.session_state.user_id}!")
     
     if st.button("Logout", key="logout_btn"):
         st.session_state.logged_in = False
@@ -85,11 +136,12 @@ else:
         
         recipient = "A" if channel == "Chat with A" else "D"
         
-        st.subheader(f"💬 {channel}")
+        st.subheader(channel)
         st.markdown("---")
         
-        # Display messages for this channel
-        channel_messages = [m for m in messages if (m["from"] == "V" and m["to"] == recipient)]
+        # Display messages for this channel (both directions)
+        channel_messages = [m for m in messages if (m["from"] == "V" and m["to"] == recipient) or (m["from"] == recipient and m["to"] == "V")]
+        channel_messages.sort(key=lambda x: x["timestamp"])
         
         if channel_messages:
             for msg in channel_messages:
@@ -116,17 +168,18 @@ else:
                     }
                     messages.append(new_message)
                     save_messages(messages)
-                    st.success("✅ Message sent!")
+                    st.success("Message sent")
                     st.rerun()
                 else:
                     st.warning("Please enter a message!")
     
     elif user_id == "A":
-        st.subheader("📥 Messages from V")
+        st.subheader("Chat with V")
         st.markdown("---")
         
-        # A can only receive messages from V
-        channel_messages = [m for m in messages if (m["from"] == "V" and m["to"] == "A")]
+        # A can send and receive messages from V
+        channel_messages = [m for m in messages if (m["from"] == "V" and m["to"] == "A") or (m["from"] == "A" and m["to"] == "V")]
+        channel_messages.sort(key=lambda x: x["timestamp"])
         
         if channel_messages:
             for msg in channel_messages:
@@ -134,16 +187,37 @@ else:
                     st.write(msg["text"])
                     st.caption(msg["timestamp"])
         else:
-            st.info("No messages from V yet.")
+            st.info("No messages yet.")
         
-        st.info("ℹ️ You can only receive messages from V. You cannot send messages.")
+        st.markdown("---")
+        
+        # Send message to V
+        col1, col2 = st.columns([4, 1])
+        with col1:
+            message_text = st.text_input("Message to V:", key="msg_a_to_v")
+        with col2:
+            if st.button("Send", key="send_a_to_v"):
+                if message_text.strip():
+                    new_message = {
+                        "from": "A",
+                        "to": "V",
+                        "text": message_text,
+                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    }
+                    messages.append(new_message)
+                    save_messages(messages)
+                    st.success("Message sent")
+                    st.rerun()
+                else:
+                    st.warning("Please enter a message!")
     
     elif user_id == "D":
-        st.subheader("📥 Messages from V")
+        st.subheader("Chat with V")
         st.markdown("---")
         
-        # D can only receive messages from V
-        channel_messages = [m for m in messages if (m["from"] == "V" and m["to"] == "D")]
+        # D can send and receive messages from V
+        channel_messages = [m for m in messages if (m["from"] == "V" and m["to"] == "D") or (m["from"] == "D" and m["to"] == "V")]
+        channel_messages.sort(key=lambda x: x["timestamp"])
         
         if channel_messages:
             for msg in channel_messages:
@@ -151,6 +225,26 @@ else:
                     st.write(msg["text"])
                     st.caption(msg["timestamp"])
         else:
-            st.info("No messages from V yet.")
+            st.info("No messages yet.")
         
-        st.info("ℹ️ You can only receive messages from V. You cannot send messages.")
+        st.markdown("---")
+        
+        # Send message to V
+        col1, col2 = st.columns([4, 1])
+        with col1:
+            message_text = st.text_input("Message to V:", key="msg_d_to_v")
+        with col2:
+            if st.button("Send", key="send_d_to_v"):
+                if message_text.strip():
+                    new_message = {
+                        "from": "D",
+                        "to": "V",
+                        "text": message_text,
+                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    }
+                    messages.append(new_message)
+                    save_messages(messages)
+                    st.success("Message sent")
+                    st.rerun()
+                else:
+                    st.warning("Please enter a message!")
