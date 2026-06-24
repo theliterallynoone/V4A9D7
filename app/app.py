@@ -3,6 +3,8 @@ import json
 from datetime import datetime
 import os
 
+BASE_DIR = os.path.dirname(__file__)
+
 # Set page config
 st.set_page_config(page_title="hub", layout="centered")
 
@@ -51,13 +53,15 @@ def apply_theme(theme_name):
 
 # Load users
 def load_users():
-    with open("users.json", "r") as f:
+    users_path = os.path.join(BASE_DIR, "users.json")
+    with open(users_path, "r") as f:
         return json.load(f)["users"]
 
 # Load messages
 def load_messages():
-    if os.path.exists("messages.json"):
-        with open("messages.json", "r") as f:
+    messages_path = os.path.join(BASE_DIR, "messages.json")
+    if os.path.exists(messages_path):
+        with open(messages_path, "r") as f:
             return json.load(f)["messages"]
     return []
 
@@ -104,10 +108,10 @@ if not st.session_state.logged_in:
         password = st.text_input("Password", type="password", key="pwd_input")
         
         if st.button("Sign In", use_container_width=True):
-            if password == users[user_id]["password"]:
+            if user_id in users and password == users[user_id].get("password", ""):
                 st.session_state.logged_in = True
                 st.session_state.user_id = user_id
-                del st.session_state.selected_user
+                st.session_state.pop("selected_user", None)
                 st.rerun()
             else:
                 st.error("Incorrect password!")
