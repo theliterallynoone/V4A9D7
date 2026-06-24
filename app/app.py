@@ -67,7 +67,8 @@ def load_messages():
 
 # Save messages
 def save_messages(messages):
-    with open("messages.json", "w") as f:
+    messages_path = os.path.join(BASE_DIR, "messages.json")
+    with open(messages_path, "w") as f:
         json.dump({"messages": messages}, f, indent=2)
 
 # Initialize session state
