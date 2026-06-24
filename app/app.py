@@ -121,7 +121,7 @@ else:
     st.sidebar.selectbox("Choose a theme", list(THEMES.keys()), key="theme")
     apply_theme(st.session_state.theme)
     # Main app - logged in
-    st.title(f"wsg gng, {st.session_state.user_id}!")
+    st.title("wsg gng")
     
     if st.button("Logout", key="logout_btn"):
         st.session_state.logged_in = False
